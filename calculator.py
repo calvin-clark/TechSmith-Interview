@@ -35,9 +35,9 @@ class CalcButton:
 class CalculatorApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.current_number = ""
+        self.current_number = "0"
         self.current_expression = []
-        self.start_new_num = False
+        self.start_new_num = True
 
         self.build_ui()
 
@@ -76,6 +76,7 @@ class CalculatorApp(QWidget):
         [CalcButton("4"), CalcButton("5"), CalcButton("6"), CalcButton("*")],
         [CalcButton("1"), CalcButton("2"), CalcButton("3"), CalcButton("-")],
         [CalcButton("0"), CalcButton("C"), CalcButton("="), CalcButton("+")],
+        [CalcButton(".")]
         ]
 
         for row_idx, row in enumerate(buttons):
@@ -106,6 +107,8 @@ class CalculatorApp(QWidget):
 
         #if there was just a calculation, reset the number
         if self.start_new_num:
+            if self.current_number == "0" and num == "0":
+                return
             self.current_number = num
             self.start_new_num = False
         else:
@@ -117,7 +120,7 @@ class CalculatorApp(QWidget):
     def handle_operation(self, operation):
         """Handler for when an operation is selected"""
 
-        if self.current_number == "":
+        if self.current_number == "" or self.current_number == "0":
             return
 
         #add the current number and operation to the expression list
@@ -136,7 +139,7 @@ class CalculatorApp(QWidget):
     def handle_calculation(self):
         """Performs the calculation on the list of inputs"""
 
-        if self.current_number == "":
+        if self.current_number == "" or self.current_number == "0":
             return
 
         if float(self.current_number) % 1 == 0:
