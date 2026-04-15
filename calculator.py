@@ -121,7 +121,10 @@ class CalculatorApp(QWidget):
             return
 
         #add the current number and operation to the expression list
-        num = int(self.current_number)
+        if float(self.current_number) % 1 == 0:
+            num = int(self.current_number)
+        else:
+            num = float(self.current_number)
         self.current_expression.append(num)
         self.current_expression.append(operation)
 
@@ -136,7 +139,10 @@ class CalculatorApp(QWidget):
         if self.current_number == "":
             return
 
-        num = int(self.current_number)
+        if float(self.current_number) % 1 == 0:
+            num = int(self.current_number)
+        else:
+            num = float(self.current_number)
         self.current_expression.append(num)
 
         #first pass - multiplication and division
@@ -149,6 +155,11 @@ class CalculatorApp(QWidget):
                     result = self.current_expression[i - 1] * self.current_expression[i + 1]
 
                 elif self.current_expression[i] == "/":
+
+                    if self.current_expression[i + 1] == 0:
+                        self.handle_clear(error=True)
+                        return
+
                     result = self.current_expression[i - 1] / self.current_expression[i + 1]
 
                 self.current_expression[i - 1] = result
@@ -180,9 +191,15 @@ class CalculatorApp(QWidget):
         self.current_number = display_str
         self.start_new_num = True
 
-    def handle_clear(self):
+    def handle_clear(self, error=False):
         """Clears the calculator"""
+
+        if error:
+            self.set_display("Error")
+        else:
+            self.set_display("0")
+        
+        self.start_new_num = True
         self.current_number = ""
-        self.set_display("0")
         self.current_expression = []
     
