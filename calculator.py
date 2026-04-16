@@ -1,6 +1,9 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
+from PySide6.QtWidgets import QApplication
+import sys
+
 from enum import Enum, auto
 
 #define digits and operations used
@@ -13,6 +16,7 @@ class ButtonType(Enum):
     OPERATION = auto()
     EQUALS = auto()
     CLEAR = auto()
+    DECIMAL = auto()
 
 """Class that represents a button"""
 class CalcButton:
@@ -30,6 +34,8 @@ class CalcButton:
             return ButtonType.EQUALS
         if val == "C":
             return ButtonType.CLEAR
+        if val == ".":
+            return ButtonType.DECIMAL
 
 """Class that contains the UI and functionality of a calculator"""
 class CalculatorApp(QWidget):
@@ -38,6 +44,7 @@ class CalculatorApp(QWidget):
         self.current_number = "0"
         self.current_expression = []
         self.start_new_num = True
+        self.has_decimal = False
 
         self.build_ui()
 
@@ -101,6 +108,8 @@ class CalculatorApp(QWidget):
             self.handle_calculation()
         elif button.type == ButtonType.CLEAR:
             self.handle_clear()
+        elif button.type == ButtonType.DECIMAL:
+            self.handle_decimal()
 
     def handle_digit(self, num):
         """Handler for when a digit is pressed"""
@@ -115,7 +124,18 @@ class CalculatorApp(QWidget):
             self.current_number += num
         
         self.set_display(self.current_number)
+
+    def handle_decimal(self):
+        """Handler for when the decimal is pressed"""
+
+        if self.has_decimal:
+            return
         
+        self.has_decimal = True
+        self.start_new_num = False
+        self.current_number += "."
+        self.set_display(self.current_number)
+
 
     def handle_operation(self, operation):
         """Handler for when an operation is selected"""
@@ -124,10 +144,7 @@ class CalculatorApp(QWidget):
             return
 
         #add the current number and operation to the expression list
-        if float(self.current_number) % 1 == 0:
-            num = int(self.current_number)
-        else:
-            num = float(self.current_number)
+        num = self.trim_whole_number(self.current_number)
         self.current_expression.append(num)
         self.current_expression.append(operation)
 
@@ -139,13 +156,7 @@ class CalculatorApp(QWidget):
     def handle_calculation(self):
         """Performs the calculation on the list of inputs"""
 
-        if self.current_number == "" or self.current_number == "0":
-            return
-
-        if float(self.current_number) % 1 == 0:
-            num = int(self.current_number)
-        else:
-            num = float(self.current_number)
+        num = self.trim_whole_number(self.current_number)
         self.current_expression.append(num)
 
         #first pass - multiplication and division
@@ -159,6 +170,7 @@ class CalculatorApp(QWidget):
 
                 elif self.current_expression[i] == "/":
 
+                    
                     if self.current_expression[i + 1] == 0:
                         self.handle_clear(error=True)
                         return
@@ -188,11 +200,27 @@ class CalculatorApp(QWidget):
 
             i += 2
 
-        display_str = str(total)
+        if float(total) % 1 != 0:
+            self.has_decimal = True
+
+        display_str = str(self.trim_whole_number(str(total)))
         self.set_display(display_str)
         self.current_expression = []
         self.current_number = display_str
         self.start_new_num = True
+
+    def trim_whole_number(self, num: str):
+        """Gets rid of trailing zero decimal"""
+        
+        if float(num) % 1 == 0:
+
+            if num[-2:] == ".0":
+                return int(num[:-2])
+            return int(num)
+        
+        else:
+            return float(num)
+        
 
     def handle_clear(self, error=False):
         """Clears the calculator"""
@@ -203,6 +231,16 @@ class CalculatorApp(QWidget):
             self.set_display("0")
         
         self.start_new_num = True
-        self.current_number = ""
+        self.has_decimal = False
+        self.current_number = "0"
         self.current_expression = []
     
+
+
+if __name__ == "__main__":
+    app = QApplication([])
+
+    window = CalculatorApp()
+    window.show()
+
+    sys.exit(app.exec())
